@@ -297,6 +297,4 @@ export default class CanvasAPI {
   }
 }
 
-module.exports = CanvasAPI;
-
 export { CanvasApiError, ExtendedGenerator };
