@@ -11,20 +11,36 @@ Node.JS HTTP client (for both TypeScript and JavaScript) based on [got](https://
 First, generate a token by going to `«YOUR CANVAS INSTANCE»/profile/settings`. For example https://canvas.kth.se/profile/settings. Then you can do something like:
 
 ```js
-import CanvasApi from "@kth/canvas-api.ts";
+const canvasApiUrl = process.env.CANVAS_API_URL;
+const canvasApiToken = process.env.CANVAS_API_TOKEN;
+const Canvas = require("@kth/canvas-api").default;
 
-const canvas = new CanvasApi(
-  "https://canvas.kth.se/api/v1",
-  "«YOUR TOKEN HERE»"
-);
+async function start() {
+  console.log("Making a GET request to /accounts/1");
+  const canvas = new Canvas(canvasApiUrl, canvasApiToken);
+
+  const { body } = await canvas.get("accounts/1");
+  console.log(body);
+}
+
+start();
+```
+
+In TypeScript, use `import`:
+
+```ts
+import Canvas from "@kth/canvas-api";
+
+console.log("Making a GET request to /accounts/1");
+const canvas = new Canvas(canvasApiUrl, canvasApiToken);
+
 const { body } = await canvas.get("accounts/1");
-
 console.log(body);
 ```
 
 ## Concepts
 
-### SIS Imports
+### 🆕 New from v4. SIS Imports
 
 This package implements one function to perform SIS Imports (i.e. call the [POST sis_imports] endpoint).
 
@@ -38,7 +54,7 @@ This package implements one function to perform SIS Imports (i.e. call the [POST
 
 ### `listItems` and `listPages`
 
-This package does have pagination support which is offered in two methods: `listItems` and `listPages`. Let's see an example by using the [GET /accounts/1/courses] endpoint.
+This package does have pagination support which is offered in two methods: `listItems` and `listPages`. Let's see an example by using the `[GET /accounts/1/courses]` endpoint.
 
 If you want to get all **pages** you can use `listPages`:
 
