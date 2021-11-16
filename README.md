@@ -46,10 +46,6 @@ This package implements one function to perform SIS Imports (i.e. call the [POST
 
 > Note: this is the only function that calls a **specific** endpoint. For other endpoints you should use `canvas.get`, `canvas.requestUrl`, `canvas.listItems` and `canvas.listPages`
 
-```ts
-
-```
-
 [post sis_imports]: https://canvas.instructure.com/doc/api/sis_imports.html#method.sis_imports_api.create
 
 ### `listItems` and `listPages`
@@ -112,18 +108,35 @@ console.log(body);
 
 ### Error handling
 
-By default, this library throws `CanvasApiError` exceptions when it gets a non-200 HTTP response.
+By default, this library throws `CanvasApiError` exceptions when it gets a non-200 HTTP response from the Canvas API. You can catch those exceptions with any of the methods:
 
-## API Reference
+```ts
+const canvas = new Canvas(canvasApiUrl, "-------");
+const pages = canvas.listPages("accounts/1/courses");
+
+// Now `pages` is an iterator that goes through every page
+try {
+  for await (const coursesResponse of pages) {
+    // `courses` is the Response object that contains a list of courses
+    const courses = coursesResponse.body;
+
+    for (const course of courses) {
+      console.log(course.id, course.name);
+    }
+  }
+} catch (err) {
+  if (err instanceof CanvasApiError) {
+    console.log(err.options.url);
+    console.log(err.response.statusCode);
+    console.log(err.message);
+  }
+}
+```
 
 ## Design philosophy
 
 1. **Do not implement every endpoint**. This package does **not** implement every endpoint in Canvas API This package also does not implement type definitions for objects returned by any endpoint nor definition for parameters. That would make it unmaintainable.
 
-   Exception: an endpoint is called exactly with the same parameters all the time.
-
 2. **Offer "lower-level" API** instead of trying to implement every possible feature, expose the "internals" to make it easy to extend.
 
    Example: you can use `.client` to get the `Got` instance that is used internally. With such object, you have access to all options given by the library [got](https://github.com/sindresorhus/got)
-
-#
