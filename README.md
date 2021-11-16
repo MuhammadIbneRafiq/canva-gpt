@@ -59,25 +59,31 @@ This package does have pagination support which is offered in two methods: `list
 If you want to get all **pages** you can use `listPages`:
 
 ```js
+const canvas = new Canvas(canvasApiUrl, canvasApiToken);
+
 const pages = canvas.listPages("accounts/1/courses");
 
 // Now `pages` is an iterator that goes through every page
-for await (const courses of pages) {
-  // `courses` is an array of courses in one page
+for await (const coursesResponse of pages) {
+  // `courses` is the Response object that contains a list of courses
+  const courses = coursesResponse.body;
+
   for (const course of courses) {
-    console.log(course.id);
+    console.log(course.id, course.name);
   }
 }
 ```
 
-To avoid writing two `for` loops like above, you can call `listItems`, that iterates elements instead of pages. The following code does exactly the same as before:
+To avoid writing two `for` loops like above, you can call `listItems`, that iterates elements instead of pages. The following code does exactly the same as before. Note that in this case, you will not have the `Response` object:
 
 ```js
+const canvas = new Canvas(canvasApiUrl, canvasApiToken);
+
 const courses = canvas.listItems("accounts/1/courses");
 
 // Now `courses` is an iterator that goes through every course
 for await (const course of courses) {
-  console.log(course.id);
+  console.log(course.id, course.name);
 }
 ```
 
@@ -85,7 +91,7 @@ for await (const course of courses) {
 
 ### Typescript support
 
-This package does not contain type definitions to the objects returned by Canvas. If you want such types, you need to define such types yourself and pass it as type parameter to the methods in this library.
+This package does not contain type definitions to the objects returned by Canvas. If you want such types, you must define them yourself and pass it as type parameter to the methods in this library.
 
 For example, to get typed "account" objects:
 
@@ -106,7 +112,7 @@ console.log(body);
 
 ### Error handling
 
-// TODO
+By default, this library throws `CanvasApiError` exceptions when it gets a non-200 HTTP response.
 
 ## API Reference
 
