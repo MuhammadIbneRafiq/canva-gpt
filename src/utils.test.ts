@@ -1,22 +1,12 @@
-const { test, expect } = require("@jest/globals");
-const { augmentGenerator } = require("./utils");
+import { test, expect } from "@jest/globals";
+import { extendGenerator } from "./utils";
 
-test("augmentGenerator does not mutate the original generator", () => {
+test("extendGenerator returns a valid generator", async () => {
   async function* gen() {
     yield 1;
   }
 
-  augmentGenerator(gen());
-
-  expect(gen().toArray).toBeFalsy();
-});
-
-test("augmentGenerator returns a valid generator", async () => {
-  async function* gen() {
-    yield 1;
-  }
-
-  const g2 = augmentGenerator(gen());
+  const g2 = extendGenerator(gen());
 
   for await (const v of g2) {
     expect(v).toBe(1);
@@ -29,7 +19,7 @@ test("AugmentedIterator.toArray works without arguments", async () => {
     yield 2;
     yield 3;
   }
-  const gen2 = augmentGenerator(gen());
+  const gen2 = extendGenerator(gen());
 
   expect(gen2.toArray()).resolves.toEqual([1, 2, 3]);
 });
@@ -40,7 +30,7 @@ test("AugmentedIterator.toArray does not restart the iteration", async () => {
     yield 2;
     yield 3;
   }
-  const gen2 = augmentGenerator(gen());
+  const gen2 = extendGenerator(gen());
 
   await gen2.next();
   expect(gen2.toArray()).resolves.toEqual([2, 3]);
