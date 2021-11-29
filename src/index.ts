@@ -114,7 +114,7 @@ export default class CanvasAPI {
     const formDataEncoder = new FormDataEncoder(fd);
 
     return this.gotClient
-      .post<SisImportResponse>("accounts/1/sis_import", {
+      .post<SisImportResponse>("accounts/1/sis_imports", {
         body: Readable.from(formDataEncoder),
         headers: formDataEncoder.headers,
         ...options,

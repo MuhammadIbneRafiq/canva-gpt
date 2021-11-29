@@ -168,7 +168,7 @@ test("sisImport fails when file is missing", async () => {
 test("sisImport returns a parsed JSON object upon success", async () => {
   const server = await createTestServer();
 
-  server.post("/accounts/1/sis_import", (req, res) => {
+  server.post("/accounts/1/sis_imports", (req, res) => {
     res.send({ key: "value" });
   });
 

@@ -10,8 +10,14 @@ async function start() {
   const canvas = new Canvas(canvasApiUrl, canvasApiToken);
 
   const filePath = path.join(__dirname, "test.csv");
-  const { body } = await canvas.sisImport(filePath);
-  console.log(body);
+
+  try {
+    const { body } = await canvas.sisImport(filePath);
+    console.log(body);
+  } catch (err) {
+    console.error("Something failed");
+    console.error(err.response.statusCode, err.response.body);
+  }
 }
 
 start();
