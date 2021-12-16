@@ -140,4 +140,3 @@ try {
 2. **Offer "lower-level" API** instead of trying to implement every possible feature, expose the "internals" to make it easy to extend.
 
    Example: you can use `.client` to get the `Got` instance that is used internally. With such object, you have access to all options given by the library [got](https://github.com/sindresorhus/got)
-
