@@ -10,7 +10,7 @@ import got, {
 import queryString from "query-string";
 import { FormData, fileFromPath } from "formdata-node";
 import { FormDataEncoder } from "form-data-encoder";
-import fs from "fs/promises";
+import { promises as fs } from "fs";
 import type { SisImportResponse } from "./sisImport";
 
 import { extendGenerator, ExtendedGenerator, CanvasApiError } from "./utils";
