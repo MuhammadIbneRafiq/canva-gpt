@@ -2,19 +2,18 @@ name: Node.js CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [12, 14, lts/*]
+        node-version: [14, lts/*]
 
     steps:
       - uses: actions/checkout@v2
