@@ -51,6 +51,7 @@ export class CanvasApiError extends Error {
       url: gotError.options.url.toString(),
       method: gotError.options.method,
     };
+    this.response = gotError.response;
 
     this.options.headers.authorization = "[HIDDEN]";
   }
