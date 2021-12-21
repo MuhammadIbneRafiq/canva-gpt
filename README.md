@@ -133,6 +133,36 @@ try {
 }
 ```
 
+#### Shorter error objects
+
+By default, `CanvasApiError` thrown by this library contains a property `response` with a very big object. If you would like to have a smaller `response` in the error object, you can modify the `errorHandler` property:
+
+```ts
+import CanvasApi, { minimalErrorHandler } from "@kth/canvas-api";
+const canvas = new CanvasApi("...");
+canvas.errorHandler = minimalErrorHandler;
+```
+
+#### Custom error objects
+
+You can also pass a custom function in the `.errorHandler` property: that function will be called with whatever is thrown by `got`. Read more about [errors in Got here](https://github.com/sindresorhus/got/blob/main/documentation/8-errors.md)
+
+For example:
+
+```ts
+import CanvasApi from "@kth/canvas-api";
+
+const canvas = new CanvasApi("...");
+
+canvas.errorHandler = function customHandler(err: unknown) {
+  if (err instanceof Error) {
+    console.error(err.message);
+  }
+
+  throw err;
+};
+```
+
 ## Design philosophy
 
 1. **Do not implement every endpoint**. This package does **not** implement every endpoint in Canvas API This package also does not implement type definitions for objects returned by any endpoint nor definition for parameters. That would make it unmaintainable.
