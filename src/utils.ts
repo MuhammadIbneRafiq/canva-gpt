@@ -1,4 +1,4 @@
-import { Headers, HTTPError } from "got";
+import { Headers, HTTPError, Method } from "got";
 
 /**
  * Special AsyncGenerator that has a convinient "toArray()" method
@@ -31,6 +31,7 @@ export class CanvasApiError extends Error {
   public options?: {
     headers: Headers;
     url: string;
+    method: Method;
   };
 
   public response?: {
@@ -48,8 +49,9 @@ export class CanvasApiError extends Error {
     this.options = {
       headers: gotError.options.headers,
       url: gotError.options.url.toString(),
+      method: gotError.options.method,
     };
-    this.response = gotError.response;
+
     this.options.headers.authorization = "[HIDDEN]";
   }
 }
