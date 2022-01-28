@@ -8,7 +8,7 @@
     "format": "eslint && prettier --write .",
     "test": "npm run test:lint && jest",
     "test:lint": "eslint src && prettier --check .",
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "prepublish": "npm run build"
   },
   "files": [
