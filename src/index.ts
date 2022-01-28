@@ -7,6 +7,7 @@ import got, {
   Response,
   HTTPError,
 } from "got";
+import { URL } from "url";
 import queryString from "query-string";
 import { FormData, fileFromPath } from "formdata-node";
 import { FormDataEncoder } from "form-data-encoder";
@@ -42,6 +43,14 @@ export default class CanvasAPI {
    * Creates a `CanvasAPI` instance
    */
   constructor(apiUrl: string, apiToken: string, options: ExtendOptions = {}) {
+    try {
+      // eslint-disable-next-line no-new
+      new URL(apiUrl);
+    } catch {
+      throw new TypeError(
+        `You need to pass a valid \`apiUrl\`. You have passed: "${apiUrl}"`
+      );
+    }
     this.gotClient = got.extend({
       prefixUrl: apiUrl,
       headers: {
