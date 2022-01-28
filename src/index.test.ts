@@ -18,6 +18,17 @@ test("Token is correctly stripped", async () => {
   }
 });
 
+test("Cannot use constructor with wrong URLs", async () => {
+  try {
+    // eslint-disable-next-line no-new
+    new Canvas("kth.test.instructure.com/api/v1", "My token");
+  } catch (err) {
+    expect(err).toMatchInlineSnapshot(
+      `[TypeError: You need to pass a valid \`apiUrl\`. You have passed: "kth.test.instructure.com/api/v1"]`
+    );
+  }
+});
+
 test('URLs are correctly "resolved"', async () => {
   const server = await createTestServer();
   server.get("/index", () => ({ foo: "bar" }));
