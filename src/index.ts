@@ -54,8 +54,7 @@ export function minimalErrorHandler(err: unknown): never {
 export default class CanvasAPI {
   private gotClient: Got;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public errorHandler: (err: unknown) => any;
+  public errorHandler: (err: unknown) => never;
 
   /**
    * Creates a `CanvasAPI` instance
@@ -198,22 +197,26 @@ export default class CanvasAPI {
     options: OptionsOfJSONResponseBody = {}
   ): AsyncGenerator<Response<T>> {
     try {
-      const first = await this.gotClient.get<T>(endpoint, {
-        searchParams: queryString.stringify(queryParams, {
-          arrayFormat: "bracket",
-        }),
-        ...options,
-      });
+      const first = await this.gotClient
+        .get<T>(endpoint, {
+          searchParams: queryString.stringify(queryParams, {
+            arrayFormat: "bracket",
+          }),
+          ...options,
+        })
+        .catch(this.errorHandler);
 
       yield first;
       let url = first.headers.link && getNextUrl(first.headers.link);
 
       while (url) {
         // eslint-disable-next-line no-await-in-loop
-        const response = await this.gotClient.get<T>(url, {
-          prefixUrl: "",
-          ...options,
-        });
+        const response = await this.gotClient
+          .get<T>(url, {
+            prefixUrl: "",
+            ...options,
+          })
+          .catch(this.errorHandler);
 
         yield response;
         url = response.headers.link && getNextUrl(response.headers.link);

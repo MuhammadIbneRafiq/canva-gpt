@@ -114,10 +114,8 @@ By default, this library throws `CanvasApiError` exceptions when it gets a non-2
 const canvas = new Canvas(canvasApiUrl, "-------");
 const pages = canvas.listPages("accounts/1/courses");
 
-// Now `pages` is an iterator that goes through every page
 try {
   for await (const coursesResponse of pages) {
-    // `courses` is the Response object that contains a list of courses
     const courses = coursesResponse.body;
 
     for (const course of courses) {
@@ -147,16 +145,21 @@ canvas.errorHandler = minimalErrorHandler;
 
 You can also pass a custom function in the `.errorHandler` property: that function will be called with whatever is thrown by `got`. Read more about [errors in Got here](https://github.com/sindresorhus/got/blob/main/documentation/8-errors.md)
 
-For example:
+Notes:
+
+- Argument `err` in the custom handler will be the error thrown by `got`, so it will never be `CanvasApiError`
+- Make sure the function you pass never returns something.
+
+You can use this function to create your own error objects:
 
 ```ts
 import CanvasApi from "@kth/canvas-api";
 
 const canvas = new CanvasApi("...");
 
-canvas.errorHandler = function customHandler(err: unknown) {
-  if (err instanceof Error) {
-    console.error(err.message);
+canvas.errorHandler = function customHandler(err: unknown): never {
+  if (err instanceof HTTPError) {
+    throw new CustomError(`Oh! An error! ${err.message}`);
   }
 
   throw err;
