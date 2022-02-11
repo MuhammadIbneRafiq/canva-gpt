@@ -28,7 +28,7 @@ function getNextUrl(linkHeader: string | string[]) {
   return null;
 }
 
-function errorHandler(err: unknown): never {
+function defaultErrorHandler(err: unknown): never {
   if (err instanceof HTTPError) {
     throw new CanvasApiError(err);
   }
@@ -36,8 +36,26 @@ function errorHandler(err: unknown): never {
   throw err;
 }
 
+export function minimalErrorHandler(err: unknown): never {
+  if (err instanceof HTTPError) {
+    const error = new CanvasApiError(err);
+    error.response = {
+      body: err.response.body,
+      headers: err.response.headers,
+      ip: err.response.ip,
+      retryCount: err.response.retryCount,
+      statusCode: err.response.statusCode,
+      statusMessage: err.response.statusMessage,
+    };
+  }
+
+  throw err;
+}
+
 export default class CanvasAPI {
-  public gotClient: Got;
+  private gotClient: Got;
+
+  public errorHandler: (err: unknown) => never;
 
   /**
    * Creates a `CanvasAPI` instance
@@ -59,6 +77,7 @@ export default class CanvasAPI {
       responseType: "json",
       ...options,
     });
+    this.errorHandler = defaultErrorHandler;
   }
 
   /** Returns the Got instance used for every request */
@@ -86,7 +105,7 @@ export default class CanvasAPI {
       method,
       json: body,
       ...options,
-    }).catch(errorHandler);
+    }).catch(this.errorHandler);
   }
 
   /** @deprecated Use `request` instead */
@@ -128,7 +147,7 @@ export default class CanvasAPI {
         headers: formDataEncoder.headers,
         ...options,
       })
-      .catch(errorHandler);
+      .catch(this.errorHandler);
   }
 
   /**
@@ -176,7 +195,7 @@ export default class CanvasAPI {
         }),
         ...options,
       })
-      .catch(errorHandler);
+      .catch(this.errorHandler);
   }
 
   // Note: the public version of this method returns an
@@ -187,28 +206,32 @@ export default class CanvasAPI {
     options: OptionsOfJSONResponseBody = {}
   ): AsyncGenerator<Response<T>> {
     try {
-      const first = await this.gotClient.get<T>(endpoint, {
-        searchParams: queryString.stringify(queryParams, {
-          arrayFormat: "bracket",
-        }),
-        ...options,
-      });
+      const first = await this.gotClient
+        .get<T>(endpoint, {
+          searchParams: queryString.stringify(queryParams, {
+            arrayFormat: "bracket",
+          }),
+          ...options,
+        })
+        .catch(this.errorHandler);
 
       yield first;
       let url = first.headers.link && getNextUrl(first.headers.link);
 
       while (url) {
         // eslint-disable-next-line no-await-in-loop
-        const response = await this.gotClient.get<T>(url, {
-          prefixUrl: "",
-          ...options,
-        });
+        const response = await this.gotClient
+          .get<T>(url, {
+            prefixUrl: "",
+            ...options,
+          })
+          .catch(this.errorHandler);
 
         yield response;
         url = response.headers.link && getNextUrl(response.headers.link);
       }
     } catch (err) {
-      errorHandler(err);
+      this.errorHandler(err);
     }
   }
 
