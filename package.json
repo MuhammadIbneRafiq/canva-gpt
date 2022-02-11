@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "format": "eslint && prettier --write .",
-    "test": "npm run test:lint && jest",
+    "test": "npm run build && npm run test:lint && jest",
     "test:lint": "eslint src && prettier --check .",
     "build": "rm -rf dist && tsc",
     "prepublish": "npm run build"
