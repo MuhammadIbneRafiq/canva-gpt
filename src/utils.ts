@@ -43,11 +43,11 @@ export class CanvasApiError extends Error {
     statusMessage?: string;
   };
 
-  public code?: string;
+  public code?: number;
 
   constructor(gotError: HTTPError) {
     super(gotError.message);
-    this.code = gotError.code;
+    this.code = gotError.response.statusCode;
     this.name = "CanvasApiError";
     this.options = {
       headers: gotError.options.headers,
