@@ -47,6 +47,8 @@ export function minimalErrorHandler(err: unknown): never {
       statusCode: err.response.statusCode,
       statusMessage: err.response.statusMessage,
     };
+
+    throw error;
   }
 
   throw err;
