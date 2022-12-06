@@ -5,6 +5,10 @@ import { setupServer } from "msw/node";
 export const ROOT_URL = "http://example.instructure.com";
 
 export const handlers = [
+  rest.get(`${ROOT_URL}/unauthorized`, (req, res, ctx) =>
+    res(ctx.status(401), ctx.json({ message: "Unauthorized" }))
+  ),
+
   rest.get(`${ROOT_URL}/index`, (req, res, ctx) =>
     res(ctx.status(200), ctx.json({ foo: "bar" }))
   ),
