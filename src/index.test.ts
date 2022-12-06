@@ -1,8 +1,18 @@
 import { expect, test } from "@jest/globals";
-import createTestServer from "create-test-server";
 import fs from "fs";
 import tempy from "tempy";
 import Canvas from "./index";
+import { server, ROOT_URL } from "./mocks";
+
+// Establish API mocking before all tests.
+beforeAll(() => server.listen());
+
+// Reset any request handlers that we may add during the tests,
+// so they don't affect other tests.
+afterEach(() => server.resetHandlers());
+
+// Clean up after the tests are finished.
+afterAll(() => server.close());
 
 test("Token is correctly stripped", async () => {
   const canvas = new Canvas(
@@ -30,142 +40,74 @@ test("Cannot use constructor with wrong URLs", async () => {
 });
 
 test('URLs are correctly "resolved"', async () => {
-  const server = await createTestServer();
-  server.get("/index", () => ({ foo: "bar" }));
-  server.get("/api/v1/courses/1", () => ({ foo: "bar" }));
-
   /** Define the type of the response */
   interface Course {
     foo: string;
   }
 
   {
-    const canvas = new Canvas(server.url ?? "", "");
+    const canvas = new Canvas(ROOT_URL, "");
     const result = await canvas.get<Course>("index");
     expect(result.body.foo).toBe("bar");
   }
   {
-    const canvas = new Canvas(server.url + "/", "");
+    const canvas = new Canvas(ROOT_URL + "/", "");
     const result = await canvas.get<Course>("index");
     expect(result.body.foo).toBe("bar");
   }
   {
-    const canvas = new Canvas(`${server.url}/api/v1`, "");
+    const canvas = new Canvas(`${ROOT_URL}/api/v1`, "");
     const result = await canvas.get<Course>("courses/1");
     expect(result.body.foo).toBe("bar");
   }
-
-  await server.close();
 });
 
 test("listItems returns a correct iterable", async () => {
-  const server = await createTestServer();
-
-  server.get("/something", (req, res) => {
-    res.set(
-      "Link",
-      `<${server.url}/something_else>; rel="next", <irrelevant>; rel="first"`
-    );
-    res.send([1, 2, 3]);
-  });
-  server.get("/something_else", () => [4, 5]);
-
-  const canvas = new Canvas(server.url ?? "", "");
+  const canvas = new Canvas(ROOT_URL ?? "", "");
   const result: number[] = [];
 
-  for await (const e of canvas.listItems<number>("something")) {
+  for await (const e of canvas.listItems<number>("page1")) {
     result.push(e);
   }
 
   expect(result).toEqual([1, 2, 3, 4, 5]);
-
-  await server.close();
 });
 
 test("listItems returns an Augmented iterable", async () => {
-  const server = await createTestServer();
-
-  server.get("/something", (req, res) => {
-    res.set(
-      "Link",
-      `<${server.url}/something_else>; rel="next", <irrelevant>; rel="first"`
-    );
-    res.send([1, 2, 3]);
-  });
-  server.get("/something_else", () => [4, 5]);
-
-  const canvas = new Canvas(server.url ?? "", "");
-  const result = await canvas.listItems("something").toArray();
+  const canvas = new Canvas(ROOT_URL ?? "", "");
+  const result = await canvas.listItems("page1").toArray();
 
   expect(result).toEqual([1, 2, 3, 4, 5]);
-
-  await server.close();
 });
 
 test('listItems ignores non-"rel=next" link headers', async () => {
-  const server = await createTestServer();
+  const canvas = new Canvas(ROOT_URL ?? "", "");
+  const result: unknown[] = [];
 
-  server.get("/something", (req, res) => {
-    res.set(
-      "Link",
-      '<http://dont-call.com>; rel="last", <http://ignore-this.se>; rel="prev", <http://nope.com>; rel="first"'
-    );
-    res.send([1]);
-  });
-
-  const canvas = new Canvas(server.url ?? "", "");
-  const result = [];
-
-  for await (const e of canvas.listItems("something")) {
+  for await (const e of canvas.listItems("page0")) {
     result.push(e);
   }
   expect(result).toEqual([1]);
-
-  await server.close();
 });
 
 test("listItems can handle pagination urls with query strings", async () => {
-  const server = await createTestServer();
+  const canvas = new Canvas(ROOT_URL ?? "", "");
 
-  server.get("/something", (req, res) => {
-    res.set("Link", `<${server.url}/something_else?query=string>; rel="next"`);
-    res.send([1]);
-  });
-  server.get("/something_else", (req, res) => {
-    if (req.originalUrl === "/something_else?query=string") {
-      res.send(["correct"]);
-    } else {
-      res.send(["nope"]);
-    }
-  });
-
-  const canvas = new Canvas(server.url ?? "", "");
-
-  const it = canvas.listItems("something?with=query_string");
+  const it = canvas.listItems("page1-with-query?with=query_string");
   await it.next();
   const result = await it.next();
   expect(result.value).toBe("correct");
-
-  await server.close();
 });
 
 test("requestUrl parses the `body` as JSON automatically", async () => {
-  const server = await createTestServer();
+  const canvas = new Canvas(ROOT_URL ?? "", "");
 
-  server.post("/endpoint", (req, res) => {
-    res.send(req.body);
-  });
-
-  const canvas = new Canvas(server.url ?? "", "");
-
-  const { body } = await canvas.request("endpoint", "POST", { foo: "bar" });
+  const { body } = await canvas.request("create", "POST", { foo: "bar" });
   expect(body).toEqual({ foo: "bar" });
-
-  await server.close();
 });
 
 test("sisImport fails when file is missing", async () => {
-  const canvas = new Canvas("https://example.instructure.com", "Token");
+  const canvas = new Canvas(ROOT_URL, "Token");
 
   try {
     await canvas.sisImport("non-existing-file");
@@ -177,31 +119,15 @@ test("sisImport fails when file is missing", async () => {
 });
 
 test("sisImport returns a parsed JSON object upon success", async () => {
-  const server = await createTestServer();
-
-  server.post("/accounts/1/sis_imports", (req, res) => {
-    res.send({ key: "value" });
-  });
-
-  const canvas = new Canvas(server.url ?? "", "");
+  const canvas = new Canvas(ROOT_URL ?? "", "");
   const tmp = tempy.file();
   fs.writeFileSync(tmp, "hello world");
   const response = await canvas.sisImport(tmp);
   expect(response.body).toEqual({ key: "value" });
-
-  await server.close();
 });
 
 test("sisImport throws an error if timeout is over", async () => {
-  const server = await createTestServer();
-
-  server.post("/file", (req, res) => {
-    setTimeout(() => {
-      res.send({ key: "value" });
-    }, 2000);
-  });
-
-  const canvas = new Canvas(server.url ?? "", "", { timeout: 1 });
+  const canvas = new Canvas(ROOT_URL ?? "", "", { timeout: 1 });
   const tmp = tempy.file();
   fs.writeFileSync(tmp, "hello world");
 
@@ -211,24 +137,14 @@ test("sisImport throws an error if timeout is over", async () => {
     expect(err).toMatchInlineSnapshot(
       `[TimeoutError: Timeout awaiting 'request' for 1ms]`
     );
-  } finally {
-    await server.close();
   }
 });
 
 test("listItems() throws an error if the endpoint response is not an array", async () => {
-  const server = await createTestServer();
-
-  server.get("/not-a-list", (req, res) => {
-    res.send({ x: 1 });
-  });
-
-  const canvas = new Canvas(server.url ?? "", "");
+  const canvas = new Canvas(ROOT_URL ?? "", "");
   const it = canvas.listItems("not-a-list");
 
   await expect(() => it.next()).rejects.toThrowErrorMatchingInlineSnapshot(
     `"The function \\".listItems()\\" should be used with endpoints that return arrays. Use \\"get()\\" or \\"listPages\\" instead with the endpoint [not-a-list]."`
   );
-
-  await server.close();
 });

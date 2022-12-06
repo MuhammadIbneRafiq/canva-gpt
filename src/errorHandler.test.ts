@@ -1,23 +1,26 @@
-import createTestServer from "create-test-server";
 import Canvas from "./index";
 import { CanvasApiError } from "./utils";
+import { server, ROOT_URL } from "./mocks";
+
+// Establish API mocking before all tests.
+beforeAll(() => server.listen());
+
+// Reset any request handlers that we may add during the tests,
+// so they don't affect other tests.
+afterEach(() => server.resetHandlers());
+
+// Clean up after the tests are finished.
+afterAll(() => server.close());
 
 test("errorHandler converts HTTPError to CanvasApiError", async () => {
-  const server = await createTestServer();
+  const canvas = new Canvas(ROOT_URL, "");
 
-  server.get("/something", (req, res) => {
-    res.status(401).send({ message: "Unauthorized" });
-  });
-
-  const canvas = new Canvas(server.url ?? "", "");
   try {
-    await canvas.get("something");
+    await canvas.get("unauthorized");
   } catch (err) {
     expect(err).toBeInstanceOf(CanvasApiError);
     expect(err).toMatchInlineSnapshot(
       `[CanvasApiError: Response code 401 (Unauthorized)]`
     );
   }
-
-  await server.close();
 });
