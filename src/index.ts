@@ -1,4 +1,7 @@
+/* eslint-disable no-shadow */
 import { Readable } from "stream";
+import { URL } from "url";
+import { promises as fs } from "fs";
 import got, {
   ExtendOptions,
   Got,
@@ -7,11 +10,9 @@ import got, {
   Response,
   HTTPError,
 } from "got";
-import { URL } from "url";
 import queryString from "query-string";
 import { FormData, fileFromPath } from "formdata-node";
 import { FormDataEncoder } from "form-data-encoder";
-import { promises as fs } from "fs";
 import type { SisImportResponse } from "./sisImport";
 
 import { extendGenerator, ExtendedGenerator, CanvasApiError } from "./utils";

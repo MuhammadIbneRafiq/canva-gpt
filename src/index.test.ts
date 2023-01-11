@@ -1,8 +1,8 @@
-import { expect, test } from "@jest/globals";
+/* eslint-disable jest/no-conditional-expect */
 import fs from "fs";
 import tempy from "tempy";
-import Canvas from "./index";
 import { server, ROOT_URL } from "./mocks";
+import Canvas from "./index";
 
 // Establish API mocking before all tests.
 beforeAll(() => server.listen());
@@ -93,9 +93,9 @@ test('listItems ignores non-"rel=next" link headers', async () => {
 test("listItems can handle pagination urls with query strings", async () => {
   const canvas = new Canvas(ROOT_URL ?? "", "");
 
-  const it = canvas.listItems("page1-with-query?with=query_string");
-  await it.next();
-  const result = await it.next();
+  const iterator = canvas.listItems("page1-with-query?with=query_string");
+  await iterator.next();
+  const result = await iterator.next();
   expect(result.value).toBe("correct");
 });
 
@@ -142,9 +142,11 @@ test("sisImport throws an error if timeout is over", async () => {
 
 test("listItems() throws an error if the endpoint response is not an array", async () => {
   const canvas = new Canvas(ROOT_URL ?? "", "");
-  const it = canvas.listItems("not-a-list");
+  const iterator = canvas.listItems("not-a-list");
 
-  await expect(() => it.next()).rejects.toThrowErrorMatchingInlineSnapshot(
+  await expect(() =>
+    iterator.next()
+  ).rejects.toThrowErrorMatchingInlineSnapshot(
     `"The function \\".listItems()\\" should be used with endpoints that return arrays. Use \\"get()\\" or \\"listPages\\" instead with the endpoint [not-a-list]."`
   );
 });

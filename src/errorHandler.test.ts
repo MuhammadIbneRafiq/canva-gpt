@@ -1,6 +1,7 @@
-import Canvas from "./index";
+/* eslint-disable jest/no-conditional-expect */
 import { CanvasApiError } from "./utils";
 import { server, ROOT_URL } from "./mocks";
+import Canvas from "./index";
 
 // Establish API mocking before all tests.
 beforeAll(() => server.listen());

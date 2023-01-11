@@ -1,4 +1,3 @@
-import { test, expect } from "@jest/globals";
 import { extendGenerator } from "./utils";
 
 test("extendGenerator returns a valid generator", async () => {
@@ -21,7 +20,7 @@ test("AugmentedIterator.toArray works without arguments", async () => {
   }
   const gen2 = extendGenerator(gen());
 
-  expect(gen2.toArray()).resolves.toEqual([1, 2, 3]);
+  await expect(gen2.toArray()).resolves.toEqual([1, 2, 3]);
 });
 
 test("AugmentedIterator.toArray does not restart the iteration", async () => {
@@ -33,5 +32,5 @@ test("AugmentedIterator.toArray does not restart the iteration", async () => {
   const gen2 = extendGenerator(gen());
 
   await gen2.next();
-  expect(gen2.toArray()).resolves.toEqual([2, 3]);
+  await expect(gen2.toArray()).resolves.toEqual([2, 3]);
 });
