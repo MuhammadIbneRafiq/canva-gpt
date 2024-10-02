@@ -4,7 +4,7 @@
 npm i @kth/canvas-api
 ```
 
-Node.JS HTTP client (for both TypeScript and JavaScript) based on [got](https://github.com/sindresorhus/got) for the [Canvas LMS API](https://canvas.instructure.com/doc/api/)
+Node.JS HTTP client (for both TypeScript and JavaScript) for the [Canvas LMS API](https://canvas.instructure.com/doc/api/)
 
 ## Getting Started
 
