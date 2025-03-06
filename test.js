@@ -101,11 +101,54 @@ async function getAnnouncements(canvas, courseId) {
       console.error("Error fetching announcements:", error.message);
     }
 }
+const fs = require('fs').promises;
+const path = require('path');
+
+async function downloadAssignmentPDF(canvas, courseId, fileId) {
+  try {
+    const file = await canvas.get(`courses/${courseId}/files/${fileId}`);
+    const response = await canvas.get(file.url, { responseType: 'arraybuffer' });
+    console.log(response)
+    
+    const fileName = file.filename;
+    const filePath = path.join(__dirname, fileName);
+    await fs.writeFile(filePath, response);
+    
+    console.log(`Downloaded: ${fileName}`);
+    return filePath;
+  } catch (error) {
+    console.error(`Error downloading PDF: ${error.message}`);
+  }
+}
+
+// Usage
+const fileId = 6147053;
+downloadAssignmentPDF(canvas, courseId, fileId);
+
 
 // getAnnouncementDetails(canvas, 28932, 267608)
-getAssignmentDetails(canvas, 28932, 129126)
+// getAssignmentDetails(canvas, 29099, 130854)
 
 // getAssignments(canvas, 28932);
 // getAnnouncements(canvas, 28932)
 
 
+
+async function get_course_tabs(canvas, courseId) {
+    try {
+        const pages = canvas.listPages(`courses/${courseId}/tabs`);
+        
+        console.log(`Available tabs for course ${courseId}:`);
+        for await (const tabsResponse of pages) {
+            const tabs = tabsResponse.body;
+            for (const tab of tabs) {
+                console.log(`- ${tab.label}: ${tab.type}`);
+            }
+        }
+    } catch (e) {
+        console.log(`Error fetching course tabs: ${e.message}`);
+    }
+}
+
+
+// get_course_tabs(canvas, courseId)
