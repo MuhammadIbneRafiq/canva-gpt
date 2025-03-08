@@ -15,15 +15,21 @@ export const storeCanvasToken = async (req, res) => {
       return res.status(400).json({ error: 'Access token is required' });
     }
 
+    // Use a default Canvas URL if not provided
+    const finalCanvasUrl = canvasUrl || 'https://canvas.tue.nl';
+    
+    console.log(`Storing Canvas token for user ${userId} with URL ${finalCanvasUrl}`);
+
     // Store the token
-    await canvasService.storeCanvasToken(userId, accessToken, canvasUrl);
+    await canvasService.storeCanvasToken(userId, accessToken, finalCanvasUrl);
 
     // Verify the token by fetching courses
-    const courses = await canvasService.getUserCourses(accessToken, canvasUrl);
+    const courses = await canvasService.getUserCourses(accessToken, finalCanvasUrl);
 
     res.status(200).json({ 
       message: 'Canvas token stored successfully',
-      courses_count: courses.length
+      courses_count: courses.length,
+      canvas_url: finalCanvasUrl
     });
   } catch (error) {
     console.error('Error in storeCanvasToken:', error);

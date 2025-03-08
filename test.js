@@ -123,32 +123,15 @@ async function downloadAssignmentPDF(canvas, courseId, fileId) {
 
 // Usage
 const fileId = 6147053;
-downloadAssignmentPDF(canvas, courseId, fileId);
+// downloadAssignmentPDF(canvas, courseId, fileId);
 
 
-// getAnnouncementDetails(canvas, 28932, 267608)
-// getAssignmentDetails(canvas, 29099, 130854)
+getAnnouncementDetails(canvas, 28932, 267608)
+getAssignmentDetails(canvas, 29099, 130854)
 
-// getAssignments(canvas, 28932);
-// getAnnouncements(canvas, 28932)
+getAssignments(canvas, 28932);
+getAnnouncements(canvas, 28932)
 
+start().catch(console.error);
 
-
-async function get_course_tabs(canvas, courseId) {
-    try {
-        const pages = canvas.listPages(`courses/${courseId}/tabs`);
-        
-        console.log(`Available tabs for course ${courseId}:`);
-        for await (const tabsResponse of pages) {
-            const tabs = tabsResponse.body;
-            for (const tab of tabs) {
-                console.log(`- ${tab.label}: ${tab.type}`);
-            }
-        }
-    } catch (e) {
-        console.log(`Error fetching course tabs: ${e.message}`);
-    }
-}
-
-
-// get_course_tabs(canvas, courseId)
+get_course_tabs(canvas, courseId)

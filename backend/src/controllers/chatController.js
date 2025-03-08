@@ -1,4 +1,5 @@
 import chatService from '../services/chatService.js';
+import canvasAgent from '../services/canvasAgent.js';
 import { supabase } from '../index.js';
 
 /**
@@ -12,6 +13,10 @@ export const handleChatMessage = async (req, res) => {
     const { message, chatHistory, canvasContext } = req.body;
     const userId = req.user?.id;
     
+    console.log('\n========== NEW CHAT REQUEST ==========');
+    console.log('User ID:', userId || 'Anonymous');
+    console.log('Message:', message);
+    
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
@@ -24,8 +29,22 @@ export const handleChatMessage = async (req, res) => {
       timestamp: new Date().toISOString()
     });
 
-    // Process the chat with the LLM
-    const response = await chatService.processChat(updatedChatHistory, canvasContext, userId);
+    // Check if the message is Canvas-related
+    const isCanvasRelated = isCanvasQuery(message);
+    
+    let response;
+    
+    if (isCanvasRelated) {
+      // Process the chat with the Canvas agent
+      console.log('Processing chat with Canvas agent...');
+      response = await canvasAgent.processChat(updatedChatHistory);
+    } else {
+      // Process the chat with the regular LLM
+      console.log('Processing chat with regular LLM...');
+      response = await chatService.processChat(updatedChatHistory, canvasContext, userId);
+    }
+    
+    console.log('Response received');
 
     // Add the AI response to the chat history
     updatedChatHistory.push({
@@ -33,6 +52,9 @@ export const handleChatMessage = async (req, res) => {
       content: response.content,
       timestamp: new Date().toISOString()
     });
+
+    console.log('AI Response:', response.content);
+    console.log('========== CHAT REQUEST COMPLETED ==========\n');
 
     // Return the response
     res.status(200).json({
@@ -46,6 +68,31 @@ export const handleChatMessage = async (req, res) => {
     res.status(500).json({ error: 'Failed to process chat message' });
   }
 };
+
+/**
+ * Determine if a message is Canvas-related
+ * @param {string} message - User message
+ * @returns {boolean} - True if the message is Canvas-related
+ */
+function isCanvasQuery(message) {
+  const canvasKeywords = [
+    'canvas',
+    'course',
+    'class',
+    'assignment',
+    'homework',
+    'announcement',
+    'module',
+    'due',
+    'grade',
+    'submission',
+    'token'
+  ];
+  
+  const lowerMessage = message.toLowerCase();
+  
+  return canvasKeywords.some(keyword => lowerMessage.includes(keyword));
+}
 
 /**
  * Get chat history for a user

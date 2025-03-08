@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCanvas } from '../contexts/CanvasContext';
 
 const CanvasTokenInput = () => {
@@ -7,41 +7,77 @@ const CanvasTokenInput = () => {
   const [localUrl, setLocalUrl] = useState(canvasUrl);
   const [isExpanded, setIsExpanded] = useState(!accessToken);
   const [showToken, setShowToken] = useState(false);
+  const [tokenSource, setTokenSource] = useState<'manual' | 'chat' | null>(null);
+
+  // Update local state when accessToken changes
+  useEffect(() => {
+    if (accessToken && accessToken !== localToken) {
+      setLocalToken(accessToken);
+      setTokenSource('chat');
+      // Collapse the panel after a token is detected in chat
+      setIsExpanded(false);
+    }
+  }, [accessToken]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setAccessToken(localToken);
     setCanvasUrl(localUrl);
+    setTokenSource('manual');
     setIsExpanded(false);
   };
 
   return (
-    <div className="border-b">
+    <div className="border-b border-gray-200 bg-white">
       <div className="p-4">
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="flex items-center justify-between w-full text-left"
         >
-          <span className="font-medium">Canvas Access Token</span>
-          <svg
-            className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M19 9l-7 7-7-7"
-            ></path>
-          </svg>
+          <div className="flex items-center">
+            <div className="mr-2 text-canvas-blue">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                <path fillRule="evenodd" d="M15.75 1.5a6.75 6.75 0 00-6.651 7.906c.067.39-.032.717-.221.906l-6.5 6.499a3 3 0 00-.878 2.121v2.818c0 .414.336.75.75.75H6a.75.75 0 00.75-.75v-1.5h1.5A.75.75 0 009 19.5V18h1.5a.75.75 0 00.75-.75V15h1.5a.75.75 0 00.53-.22l.5-.5a.75.75 0 00.22-.53V12h1.5a.75.75 0 00.53-.22l.5-.5a.75.75 0 00.22-.53V9.75a.75.75 0 00-.75-.75h-1.5a.75.75 0 00-.75.75v1.5a.75.75 0 01-.75.75h-1.5a.75.75 0 00-.75.75v1.5a.75.75 0 01-.75.75h-1.5a.75.75 0 00-.75.75v1.5a.75.75 0 01-.75.75h-1.5a.75.75 0 00-.75.75v1.5a.75.75 0 01-.75.75H3a.75.75 0 00-.75.75V21a.75.75 0 00.75.75h2.25a.75.75 0 00.75-.75v-1.5h1.5a.75.75 0 00.75-.75v-1.5h1.5a.75.75 0 00.75-.75v-1.5h1.5a.75.75 0 00.75-.75v-1.5h1.5a.75.75 0 00.75-.75V10.5a6.75 6.75 0 00-.75-9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="font-medium">Canvas Access Token</span>
+          </div>
+          <div className="flex items-center">
+            {accessToken && (
+              <span className="mr-2 text-xs px-2 py-1 bg-canvas-green text-white rounded-full">
+                Active
+              </span>
+            )}
+            <svg
+              className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M19 9l-7 7-7-7"
+              ></path>
+            </svg>
+          </div>
         </button>
 
         {!isExpanded && accessToken && (
-          <div className="mt-2 text-sm text-gray-600">
-            <p>Canvas token is set ✓</p>
+          <div className="mt-2 text-sm">
+            <div className="flex items-center text-gray-600">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 mr-1 text-canvas-green">
+                <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+              </svg>
+              <span>
+                Canvas token is set {tokenSource === 'chat' ? '(detected in chat)' : '(manually entered)'}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Connected to: {canvasUrl}
+            </p>
           </div>
         )}
 
@@ -57,7 +93,7 @@ const CanvasTokenInput = () => {
                 value={localUrl}
                 onChange={(e) => setLocalUrl(e.target.value)}
                 placeholder="https://canvas.tue.nl"
-                className="input"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
               <p className="mt-1 text-xs text-gray-500">
                 The URL of your Canvas instance (e.g., https://canvas.tue.nl)
@@ -75,7 +111,7 @@ const CanvasTokenInput = () => {
                   value={localToken}
                   onChange={(e) => setLocalToken(e.target.value)}
                   placeholder="Enter your Canvas access token"
-                  className="input pr-10"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 pr-10"
                 />
                 <button
                   type="button"
@@ -109,21 +145,26 @@ const CanvasTokenInput = () => {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                You can generate an access token in your Canvas account settings.
-                <a 
-                  href="https://community.canvaslms.com/t5/Student-Guide/How-do-I-manage-API-access-tokens-as-a-student/ta-p/273"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary-600 ml-1"
-                >
-                  Learn how
-                </a>
-              </p>
+              <div className="mt-1 text-xs text-gray-500 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 mr-1 text-canvas-blue">
+                  <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z" clipRule="evenodd" />
+                </svg>
+                <span>
+                  You can generate an access token in your Canvas account settings.
+                  <a 
+                    href="https://community.canvaslms.com/t5/Student-Guide/How-do-I-manage-API-access-tokens-as-a-student/ta-p/273"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary-600 ml-1"
+                  >
+                    Learn how
+                  </a>
+                </span>
+              </div>
             </div>
 
             {error && (
-              <div className="mb-4 p-2 bg-red-100 text-red-800 rounded-md text-sm">
+              <div className="mb-4 p-3 bg-canvas-red bg-opacity-10 text-canvas-red rounded-md text-sm border border-canvas-red border-opacity-20">
                 {error}
               </div>
             )}
@@ -134,15 +175,16 @@ const CanvasTokenInput = () => {
                 onClick={() => {
                   setLocalToken('');
                   setAccessToken('');
+                  setTokenSource(null);
                 }}
-                className="btn btn-secondary mr-2"
+                className="px-4 py-2 mr-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 disabled={loading}
               >
                 Clear
               </button>
               <button 
                 type="submit" 
-                className="btn btn-primary"
+                className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:opacity-50"
                 disabled={loading || !localToken}
               >
                 {loading ? 'Saving...' : 'Save Token'}
